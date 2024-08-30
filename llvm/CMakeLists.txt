@@ -482,6 +482,7 @@ set(LLVM_ALL_TARGETS
   PowerPC
   RISCV
   Sparc
+  StubV
   SystemZ
   VE
   WebAssembly
