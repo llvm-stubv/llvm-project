@@ -1,6 +1,6 @@
 # RUN: llvm-mc --disassemble %s -triple=stubv32 | FileCheck %s
 
-# CHECK: add x10, x10, x11
+# CHECK: add a0, a0, a1
 [0x33,0x05,0xb5,0x00]
 # CHECK: ret
 [0x67,0x80,0x00,0x00]

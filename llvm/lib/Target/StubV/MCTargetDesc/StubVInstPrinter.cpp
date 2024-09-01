@@ -56,3 +56,14 @@ void StubVInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
 void StubVInstPrinter::printRegName(raw_ostream &O, MCRegister Reg) const {
   markup(O, Markup::Register) << getRegisterName(Reg);
 }
+
+// Print architectural register names rather than the ABI names (such as x2
+// instead of sp).
+// TODO: Make StubVInstPrinter::getRegisterName non-static so that this can a
+// member.
+static bool ArchRegNames;
+
+const char *StubVInstPrinter::getRegisterName(MCRegister Reg) {
+  return getRegisterName(Reg, ArchRegNames ? StubV::NoRegAltName
+                                           : StubV::ABIRegAltName);
+}

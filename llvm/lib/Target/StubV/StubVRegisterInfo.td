@@ -18,8 +18,12 @@ class StubVReg<bits<5> Enc, string n, list<string> alt = []> : Register<n> {
   let AltNames = alt;
 }
 
+let FallbackRegAltNameIndex = NoRegAltName in
+def ABIRegAltName : RegAltNameIndex;
+
 } // Namespace "StubV"
 
+let RegAltNameIndices = [ABIRegAltName] in {
   let isConstant = true in
   def X0  : StubVReg<0, "x0", ["zero"]>, DwarfRegNum<[0]>;
   def X1  : StubVReg<1, "x1", ["ra"]>, DwarfRegNum<[1]>;
@@ -53,6 +57,7 @@ class StubVReg<bits<5> Enc, string n, list<string> alt = []> : Register<n> {
   def X29 : StubVReg<29,"x29", ["t4"]>, DwarfRegNum<[29]>;
   def X30 : StubVReg<30,"x30", ["t5"]>, DwarfRegNum<[30]>;
   def X31 : StubVReg<31,"x31", ["t6"]>, DwarfRegNum<[31]>;
+}
 
 class StubVRegisterClass<list<ValueType> regTypes, int align, dag regList>
     : RegisterClass<"StubV", regTypes, align, regList> {
