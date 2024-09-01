@@ -20,4 +20,15 @@
 namespace llvm {
 }
 
+// Defines symbolic names for Stub-V registers.
+#define GET_REGINFO_ENUM
+#include "StubVGenRegisterInfo.inc"
+
+// Defines symbolic names for Stub-V instructions.
+#define GET_INSTRINFO_ENUM
+#include "StubVGenInstrInfo.inc"
+
+#define GET_SUBTARGETINFO_ENUM
+#include "StubVGenSubtargetInfo.inc"
+
 #endif // LLVM_LIB_TARGET_STUBV_MCTARGETDESC_STUBVMCTARGETDESC_H
