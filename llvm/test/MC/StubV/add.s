@@ -1,5 +1,8 @@
-# RUN: llvm-mc --triple stubv32 < %s
+# RUN: llvm-mc --triple stubv32 < %s -show-encoding | FileCheck %s
 
+# CHECK: encoding: [0x33,0x85,0xc5,0x00]
 add a0, a1, a2
+# CHECK: encoding: [0x67,0x80,0x00,0x00]
 ret
+# CHECK: encoding: [0x67,0x80,0x00,0x00]
 jalr x0, 0(x1)

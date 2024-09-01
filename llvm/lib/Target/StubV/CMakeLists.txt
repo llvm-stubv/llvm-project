@@ -6,6 +6,7 @@ tablegen(LLVM StubVGenAsmMatcher.inc -gen-asm-matcher)
 tablegen(LLVM StubVGenAsmWriter.inc -gen-asm-writer)
 tablegen(LLVM StubVGenDisassemblerTables.inc -gen-disassembler)
 tablegen(LLVM StubVGenInstrInfo.inc -gen-instr-info)
+tablegen(LLVM StubVGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM StubVGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM StubVGenSubtargetInfo.inc -gen-subtarget)
 

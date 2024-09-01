@@ -18,7 +18,24 @@
 #include <memory>
 
 namespace llvm {
-}
+class MCAsmBackend;
+class MCCodeEmitter;
+class MCContext;
+class MCInstrInfo;
+class MCRegisterInfo;
+class MCObjectTargetWriter;
+class MCSubtargetInfo;
+class Target;
+
+MCCodeEmitter *createStubVMCCodeEmitter(const MCInstrInfo &MCII,
+                                        MCContext &Ctx);
+
+MCAsmBackend *createStubVAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                    const MCRegisterInfo &MRI,
+                                    const MCTargetOptions &Options);
+
+std::unique_ptr<MCObjectTargetWriter> createStubVELFObjectWriter(uint8_t OSABI);
+} // namespace llvm
 
 // Defines symbolic names for Stub-V registers.
 #define GET_REGINFO_ENUM

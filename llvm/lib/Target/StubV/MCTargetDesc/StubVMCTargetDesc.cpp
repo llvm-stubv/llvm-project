@@ -14,6 +14,7 @@
 #include "StubVInstPrinter.h"
 #include "StubVMCAsmInfo.h"
 #include "TargetInfo/StubVTargetInfo.h"
+#include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
@@ -70,6 +71,8 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeStubVTargetMC() {
   TargetRegistry::RegisterMCAsmInfo(T, createStubVMCAsmInfo);
   TargetRegistry::RegisterMCInstrInfo(T, createStubVMCInstrInfo);
   TargetRegistry::RegisterMCRegInfo(T, createStubVMCRegisterInfo);
+  TargetRegistry::RegisterMCAsmBackend(T, createStubVAsmBackend);
+  TargetRegistry::RegisterMCCodeEmitter(T, createStubVMCCodeEmitter);
   TargetRegistry::RegisterMCInstPrinter(T, createStubVMCInstPrinter);
   TargetRegistry::RegisterMCSubtargetInfo(T, createStubVMCSubtargetInfo);
 }
