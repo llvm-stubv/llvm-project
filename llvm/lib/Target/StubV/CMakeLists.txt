@@ -4,6 +4,7 @@ set(LLVM_TARGET_DEFINITIONS StubV.td)
 
 tablegen(LLVM StubVGenAsmMatcher.inc -gen-asm-matcher)
 tablegen(LLVM StubVGenAsmWriter.inc -gen-asm-writer)
+tablegen(LLVM StubVGenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM StubVGenDisassemblerTables.inc -gen-disassembler)
 tablegen(LLVM StubVGenInstrInfo.inc -gen-instr-info)
 tablegen(LLVM StubVGenMCCodeEmitter.inc -gen-emitter)
@@ -13,6 +14,14 @@ tablegen(LLVM StubVGenSubtargetInfo.inc -gen-subtarget)
 add_public_tablegen_target(StubVCommonTableGen)
 
 add_llvm_target(StubVCodeGen
+  StubVAsmPrinter.cpp
+  StubVFrameLowering.cpp
+  StubVISelDAGToDAG.cpp
+  StubVISelLowering.cpp
+  StubVInstrInfo.cpp
+  StubVRegisterInfo.cpp
+  StubVSubtarget.cpp
+  StubVTargetObjectFile.cpp
   StubVTargetMachine.cpp
 
   LINK_COMPONENTS

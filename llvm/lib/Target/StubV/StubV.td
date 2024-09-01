@@ -13,6 +13,7 @@ include "llvm/Target/Target.td"
 //===----------------------------------------------------------------------===//
 
 include "StubVRegisterInfo.td"
+include "StubVCallingConv.td"
 include "StubVInstrInfo.td"
 
 def StubVInstrInfo : InstrInfo {

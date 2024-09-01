@@ -11,7 +11,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "StubVTargetMachine.h"
+#include "StubV.h"
+#include "StubVTargetObjectFile.h"
 #include "TargetInfo/StubVTargetInfo.h"
+#include "llvm/CodeGen/TargetPassConfig.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/Function.h"
 #include "llvm/MC/TargetRegistry.h"
 
 using namespace llvm;
@@ -38,6 +43,51 @@ StubVTargetMachine::StubVTargetMachine(const Target &T, const Triple &TT,
                                        CodeGenOptLevel OL, bool JIT)
     : LLVMTargetMachine(T, computeDataLayout(TT, Options), TT, CPU, FS, Options,
                         getEffectiveRelocModel(TT, RM),
-                        getEffectiveCodeModel(CM, CodeModel::Small), OL) {
+                        getEffectiveCodeModel(CM, CodeModel::Small), OL),
+      TLOF(std::make_unique<StubVELFTargetObjectFile>()) {
   initAsmInfo();
+}
+
+const StubVSubtarget *
+StubVTargetMachine::getSubtargetImpl(const Function &F) const {
+  Attribute CPUAttr = F.getFnAttribute("target-cpu");
+  Attribute FSAttr = F.getFnAttribute("target-features");
+
+  auto CPU = CPUAttr.isValid() ? CPUAttr.getValueAsString().str() : TargetCPU;
+  auto FS = FSAttr.isValid() ? FSAttr.getValueAsString().str() : TargetFS;
+
+  auto &I = SubtargetMap[CPU + FS];
+  if (!I) {
+    // This needs to be done before we create a new subtarget since any
+    // creation will depend on the TM and the code generation flags on the
+    // function that reside in TargetOptions.
+    resetTargetOptions(F);
+    I = std::make_unique<StubVSubtarget>(TargetTriple, CPU, FS, *this);
+  }
+  return I.get();
+}
+
+namespace {
+
+class StubVPassConfig : public TargetPassConfig {
+public:
+  StubVPassConfig(StubVTargetMachine &TM, PassManagerBase &PM)
+      : TargetPassConfig(TM, PM) {}
+
+  StubVTargetMachine &getStubVTargetMachine() const {
+    return getTM<StubVTargetMachine>();
+  }
+
+  bool addInstSelector() override;
+};
+} // namespace
+
+bool StubVPassConfig::addInstSelector() {
+  addPass(createStubVISelDag(getStubVTargetMachine(), getOptLevel()));
+
+  return false;
+}
+
+TargetPassConfig *StubVTargetMachine::createPassConfig(PassManagerBase &PM) {
+  return new StubVPassConfig(*this, PM);
 }
