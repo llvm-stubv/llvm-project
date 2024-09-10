@@ -76,6 +76,7 @@ add_tablegen(llvm-tblgen LLVM
   X86MnemonicTables.cpp
   X86ModRMFilters.cpp
   X86RecognizableInstr.cpp
+  CStructEmitter.cpp
   $<TARGET_OBJECTS:obj.LLVMTableGenBasic>
   $<TARGET_OBJECTS:obj.LLVMTableGenCommon>
 
