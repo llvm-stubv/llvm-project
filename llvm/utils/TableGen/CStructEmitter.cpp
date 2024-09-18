@@ -10,10 +10,9 @@ std::string getIndent() { return std::string(indent, ' '); }
 
 class CppStructEmitter {
   // The RecordKeeper is the central database of the parsed and evaluated
-  // Tablgen input. It's got everything we need.
+  // Tablegen input. It's got everything we need.
   RecordKeeper &RK;
 
-  void emitForwardDecls(raw_ostream &O);
   /* Tablegen class = abstract. It describes the form of the data -> This maps
    * nicely to C++ struct declarations
    * e.g.
@@ -24,9 +23,8 @@ class CppStructEmitter {
    */
   void emitStructDecls(raw_ostream &O);
   /* Tablegen def = concrete instantiation of a `class`. Usually they have
-   * names, but in Tablgen they can be anonymous. This backend will probably
-   * crash in that situation since we don't do anything about it yet.. It
-   * describes the
+   * names, but in Tablegen they can be anonymous. This backend will probably
+   * crash in that situation since we don't do anything about it yet...
    *
    *     let Name = "woof" in { def foo : Foo; }
    *
@@ -37,7 +35,7 @@ class CppStructEmitter {
   void emitStructDefs(raw_ostream &O);
 
 public:
-  /* Once we've registered our backend, Tablgen will construct us after parsing
+  /* Once we've registered our backend, Tablegen will construct us after parsing
    * and evaluation of the user's Tablegen input and pass us a `RecordKeeper`.
    * The RecordKeeper contains all the `def`s, `class`es, from the input
    * Tablegen - along with some simple debug info and things like assert
@@ -66,18 +64,8 @@ void CppStructEmitter::run(raw_ostream &O) {
   // declarations based on all the Tablegen `class`es, then finally all the defs
   // as named global variables
   emitFrontMatter(O, RK.getInputFilename());
-  emitForwardDecls(O);
   emitStructDecls(O);
   emitStructDefs(O);
-}
-
-void CppStructEmitter::emitForwardDecls(raw_ostream &O) {
-  O << "// Forward decls. We might need them later\n";
-  for (auto &Pair : RK.getClasses()) {
-    const std::string Name = Pair.first;
-    O << "struct " << Name << ";\n";
-  }
-  O << "\n\n";
 }
 
 int getListDims(ListRecTy *L) {
@@ -229,10 +217,9 @@ std::string stringifyInit(Init *I) {
 
 void emitInnerValues(raw_ostream &O, Record &R) {
   indent += 2;
-  std::string Spaces(indent, ' ');
   for (const RecordVal &V : R.getValues()) {
-    O << Spaces << "." << V.getName() << " = " << stringifyInit(V.getValue())
-      << ",\n";
+    O << getIndent() << "." << V.getName() << " = "
+      << stringifyInit(V.getValue()) << ",\n";
   }
   indent -= 2;
 }
@@ -248,7 +235,6 @@ void CppStructEmitter::emitStructDefs(raw_ostream &O) {
     O << "};\n";
   }
 }
-
 } // namespace
 
 /*
