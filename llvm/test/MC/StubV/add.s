@@ -8,13 +8,13 @@
 # CHECK-INST-NEXT:  <MCOperand Reg:13>>
 add a0, a1, a2
 # CHECK-ENCODING: encoding: [0x67,0x80,0x00,0x00]
-# CHECK-INST:      <MCInst #296 JALR
+# CHECK-INST:      <MCInst #{{[0-9]+}} JALR
 # CHECK-INST-NEXT:  <MCOperand Reg:1>
 # CHECK-INST-NEXT:  <MCOperand Reg:2>
 # CHECK-INST-NEXT:  <MCOperand Imm:0>>
 ret
 # CHECK-ENCODING: encoding: [0x67,0x80,0x00,0x00]
-# CHECK-INST:      <MCInst #296 JALR
+# CHECK-INST:      <MCInst #{{[0-9]+}} JALR
 # CHECK-INST-NEXT:  <MCOperand Reg:1>
 # CHECK-INST-NEXT:  <MCOperand Reg:2>
 # CHECK-INST-NEXT:  <MCOperand Imm:0>>
