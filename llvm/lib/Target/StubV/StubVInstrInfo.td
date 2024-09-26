@@ -76,4 +76,31 @@ def JALR : Instruction {
   let mayStore = 0;
 }
 
+def SLL : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, GPR:$rs2);
+
+  let AsmString = "sll\t$rd, ${rs1}, ${rs2}";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<5> rd;
+  bits<5> rs1;
+  bits<5> rs2;
+
+  let Inst{31-25} = 0b0000000;
+  let Inst{24-20} = rs2;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b001;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP.Value;
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+}
+
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
