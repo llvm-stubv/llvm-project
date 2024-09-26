@@ -16,6 +16,36 @@
 
 include "StubVInstrFormats.td"
 
+def OR : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, GPR:$rs2);
+  let AsmString = "or\t$rd, $rs1, $rs2";
+
+  field bits<32> Inst;
+  // SoftFail is a field the disassembler can use to provide a way for
+  // instructions to not match without killing the whole decode process. It is
+  // mainly used for ARM, but Tablegen expects this field to exist or it fails
+  // to build the decode table.
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<5> rs2;
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{31-25} = 0b0000000;
+  let Inst{24-20} = rs2;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b110;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP.Value;
+  let isCommutable = 1;
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+}
+
 def ADD : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
