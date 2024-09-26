@@ -16,11 +16,16 @@
 
 include "StubVInstrFormats.td"
 
-def ADD : Instruction {
+class OpInstruction<string asm, bits<3> funct3, bits<7> funct7> : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
   dag InOperandList = (ins GPR:$rs1, GPR:$rs2);
-  let AsmString = "add\t$rd, $rs1, $rs2";
+  let AsmString = !strconcat(asm,"\t$rd, $rs1, $rs2");
+
+  bits<7> opcode = OPC_OP.Value;
+  bits<5> rd;
+  bits<5> rs1;
+  bits<5> rs2;
 
   field bits<32> Inst;
   // SoftFail is a field the disassembler can use to provide a way for
@@ -30,21 +35,20 @@ def ADD : Instruction {
   field bits<32> SoftFail = 0;
   let Size = 4;
 
-  bits<5> rs2;
-  bits<5> rs1;
-  bits<5> rd;
-
-  let Inst{31-25} = 0b0000000;
+  let Inst{31-25} = funct7;
   let Inst{24-20} = rs2;
   let Inst{19-15} = rs1;
-  let Inst{14-12} = 0b000;
+  let Inst{14-12} = funct3;
   let Inst{11-7} = rd;
-  let Inst{6-0} = OPC_OP.Value;
+  let Inst{6-0} = opcode;
   let isCommutable = 1;
   let hasSideEffects = 0;
   let mayLoad = 0;
   let mayStore = 0;
 }
+
+def ADD : OpInstruction<"add", 0, 0>;
+def SLL : OpInstruction<"sll", 1, 0>;
 
 def JALR : Instruction {
   let Namespace = "StubV";
@@ -70,33 +74,6 @@ def JALR : Instruction {
   let Inst{14-12} = 0b000;
   let Inst{11-7} = rd;
   let Inst{6-0} = OPC_JALR.Value;
-
-  let hasSideEffects = 0;
-  let mayLoad = 0;
-  let mayStore = 0;
-}
-
-def SLL : Instruction {
-  let Namespace = "StubV";
-  dag OutOperandList = (outs GPR:$rd);
-  dag InOperandList = (ins GPR:$rs1, GPR:$rs2);
-
-  let AsmString = "sll\t$rd, ${rs1}, ${rs2}";
-
-  field bits<32> Inst;
-  field bits<32> SoftFail = 0;
-  let Size = 4;
-
-  bits<5> rd;
-  bits<5> rs1;
-  bits<5> rs2;
-
-  let Inst{31-25} = 0b0000000;
-  let Inst{24-20} = rs2;
-  let Inst{19-15} = rs1;
-  let Inst{14-12} = 0b001;
-  let Inst{11-7} = rd;
-  let Inst{6-0} = OPC_OP.Value;
 
   let hasSideEffects = 0;
   let mayLoad = 0;
