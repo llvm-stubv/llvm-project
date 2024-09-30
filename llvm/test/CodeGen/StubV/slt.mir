@@ -1,0 +1,77 @@
+# RUN: llc %s -mtriple=stubv32 -start-after=unpack-mi-bundles -o - | FileCheck %s
+
+--- |
+  ; ModuleID = '<stdin>'
+  source_filename = "<stdin>"
+  target datalayout = "e-m:e-p:32:32-i64:64-n32-S128"
+  target triple = "stubv32"
+
+  define i32 @foo(i32 %a, i32 %b) {
+  ; CHECK-LABEL: foo:
+  ; CHECK:       # %bb.0:
+  ; CHECK-NEXT:    slt a0, a0, a1
+  ; CHECK-NEXT:    ret
+    %c = slt i32 %a, %b
+    ret i32 %c
+  }
+
+...
+---
+name:            foo
+alignment:       4
+exposesReturnsTwice: false
+legalized:       false
+regBankSelected: false
+selected:        false
+failedISel:      false
+tracksRegLiveness: true
+hasWinCFI:       false
+callsEHReturn:   false
+callsUnwindInit: false
+hasEHCatchret:   false
+hasEHScopes:     false
+hasEHFunclets:   false
+isOutlined:      false
+debugInstrRef:   false
+failsVerification: false
+tracksDebugUserValues: true
+registers:       []
+liveins:
+  - { reg: '$x10', virtual-reg: '' }
+  - { reg: '$x11', virtual-reg: '' }
+frameInfo:
+  isFrameAddressTaken: false
+  isReturnAddressTaken: false
+  hasStackMap:     false
+  hasPatchPoint:   false
+  stackSize:       0
+  offsetAdjustment: 0
+  maxAlignment:    1
+  adjustsStack:    false
+  hasCalls:        false
+  stackProtector:  ''
+  functionContext: ''
+  maxCallFrameSize: 0
+  cvBytesOfCalleeSavedRegisters: 0
+  hasOpaqueSPAdjustment: false
+  hasVAStart:      false
+  hasMustTailInVarArgFunc: false
+  hasTailCall:     false
+  isCalleeSavedInfoValid: true
+  localFrameSize:  0
+  savePoint:       ''
+  restorePoint:    ''
+fixedStack:      []
+stack:           []
+entry_values:    []
+callSites:       []
+debugValueSubstitutions: []
+constants:       []
+body:             |
+  bb.0 (%ir-block.0):
+    liveins: $x10, $x11
+
+    renamable $x10 = SLT killed renamable $x10, killed renamable $x11
+    $x0 = JALR $x1, 0
+
+...
