@@ -31,6 +31,10 @@ class StubVInstrInfo : public StubVGenInstrInfo {
 public:
   explicit StubVInstrInfo(StubVSubtarget &STI);
 
+  void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+                   const DebugLoc &DL, MCRegister DstReg, MCRegister SrcReg,
+                   bool KillSrc) const override;
+
 protected:
   const StubVSubtarget &STI;
 };

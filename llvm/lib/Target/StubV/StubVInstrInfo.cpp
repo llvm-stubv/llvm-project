@@ -24,3 +24,19 @@ using namespace llvm;
 
 StubVInstrInfo::StubVInstrInfo(StubVSubtarget &STI)
     : StubVGenInstrInfo(), STI(STI) {}
+
+void StubVInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MBBI,
+                                 const DebugLoc &DL, MCRegister DstReg,
+                                 MCRegister SrcReg, bool KillSrc) const {
+  // We can copy between GPRs using ADDI
+  if (StubV::GPRRegClass.contains(DstReg, SrcReg)) {
+    BuildMI(MBB, MBBI, DL, get(StubV::ADDI), DstReg)
+        .addReg(SrcReg, getKillRegState(KillSrc))
+        .addImm(0);
+    return;
+  }
+
+  // Other than that we don't know what to do yet
+  report_fatal_error("Unable to copy phys reg");
+}
