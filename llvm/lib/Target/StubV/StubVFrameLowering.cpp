@@ -23,14 +23,52 @@ StubVFrameLowering::StubVFrameLowering(const StubVSubtarget &STI)
                           /*TransientStackAlignment=*/Align(16)),
       STI(STI) {}
 
+// Determines the size of the frame and maximum call frame size.
+void StubVFrameLowering::determineFrameLayout(MachineFunction &MF) const {
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+
+  // Get the number of bytes to allocate from the FrameInfo.
+  uint64_t FrameSize = MFI.getStackSize();
+
+  // Get the alignment.
+  Align StackAlign = getStackAlign();
+
+  // Make sure the frame is aligned.
+  FrameSize = alignTo(FrameSize, StackAlign);
+
+  // Update frame info.
+  MFI.setStackSize(FrameSize);
+}
+
 void StubVFrameLowering::emitPrologue(MachineFunction &MF,
                                       MachineBasicBlock &MBB) const {
-  llvm_unreachable("Unimplemented API");
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+
+  // Determine the correct frame layout
+  determineFrameLayout(MF);
+
+  uint64_t StackSize = alignTo(MFI.getStackSize(), getStackAlign());
+
+  if (StackSize == 0 && !MFI.adjustsStack())
+    return;
+
+  report_fatal_error("No support for non-zero stack usage");
 }
 
 void StubVFrameLowering::emitEpilogue(MachineFunction &MF,
                                       MachineBasicBlock &MBB) const {
-  llvm_unreachable("Unimplemented API");
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+
+  const StubVRegisterInfo *RI = STI.getRegisterInfo();
+  assert(!RI->hasStackRealignment(MF) && !MFI.hasVarSizedObjects() &&
+         hasReservedCallFrame(MF) && "Stack usage limited");
+
+  uint64_t StackSize = alignTo(MFI.getStackSize(), getStackAlign());
+
+  if (StackSize == 0 && !MFI.adjustsStack())
+    return;
+
+  report_fatal_error("No support for non-zero stack usage");
 }
 
 // Return true if the specified function should have a dedicated frame
@@ -44,4 +82,11 @@ bool StubVFrameLowering::hasFP(const MachineFunction &MF) const {
   return MF.getTarget().Options.DisableFramePointerElim(MF) ||
          RegInfo->hasStackRealignment(MF) || MFI.hasVarSizedObjects() ||
          MFI.isFrameAddressTaken();
+}
+
+// Not preserve stack space within prologue for outgoing variables when the
+// function contains variable size objects.
+// Let eliminateCallFramePseudoInstr preserve stack space for it.
+bool StubVFrameLowering::hasReservedCallFrame(const MachineFunction &MF) const {
+  return !MF.getFrameInfo().hasVarSizedObjects();
 }

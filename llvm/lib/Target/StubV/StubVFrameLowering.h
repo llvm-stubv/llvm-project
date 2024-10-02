@@ -30,6 +30,10 @@ public:
 
 protected:
   const StubVSubtarget &STI;
+
+private:
+  void determineFrameLayout(MachineFunction &MF) const;
+  bool hasReservedCallFrame(const MachineFunction &MF) const override;
 };
 } // namespace llvm
 
