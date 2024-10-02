@@ -14,6 +14,13 @@
 // Stub-V specific DAG Nodes.
 //===----------------------------------------------------------------------===//
 
+def stubv_ret_glue  : SDNode<"StubVISD::RET_GLUE", SDTNone,
+                             [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
+
+//===----------------------------------------------------------------------===//
+// Instruction Formats
+//===----------------------------------------------------------------------===//
+
 include "StubVInstrFormats.td"
 
 def ADD : Instruction {
@@ -79,6 +86,12 @@ def ADDI : Instruction {
   let isAsCheapAsAMove = 1;
 }
 
+def : Pat<(XLenVT (add (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
+          (ADD GPR:$rs1, GPR:$rs2)>;
+// FIXME: This should be restricted to 12 bit immediates.
+def : Pat<(XLenVT (add (XLenVT GPR:$rs1), imm:$simm12)),
+          (ADDI GPR:$rs1, imm:$simm12)>;
+
 def JALR : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
@@ -107,6 +120,33 @@ def JALR : Instruction {
   let hasSideEffects = 0;
   let mayLoad = 0;
   let mayStore = 0;
+}
+
+def PseudoRET : Instruction,
+                PseudoInstExpansion<(JALR X0, X1, 0)> {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs);
+  dag InOperandList = (ins);
+
+  let Pattern = [(stubv_ret_glue)];
+
+  field bits<32> Inst;
+  // SoftFail is a field the disassembler can use to provide a way for
+  // instructions to not match without killing the whole decode process. It is
+  // mainly used for ARM, but Tablegen expects this field to exist or it fails
+  // to build the decode table.
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+
+  let isBarrier = 1;
+  let isReturn = 1;
+  let isTerminator = 1;
+  let isPseudo = 1;
+  let isCodeGenOnly = 1;
 }
 
 //===----------------------------------------------------------------------===//

@@ -38,12 +38,23 @@ public:
 
   bool lowerOperand(const MachineOperand &MO, MCOperand &MCOp) const;
 
+  bool emitPseudoExpansionLowering(MCStreamer &OutStreamer,
+                                   const MachineInstr *MI);
+
 private:
   bool lowerToMCInst(const MachineInstr *MI, MCInst &OutMI);
 };
 } // namespace
 
+// Simple pseudo-instructions have their lowering (with expansion to real
+// instructions) auto-generated.
+#include "StubVGenMCPseudoLowering.inc"
+
 void StubVAsmPrinter::emitInstruction(const MachineInstr *MI) {
+  // Do any auto-generated pseudo lowerings.
+  if (emitPseudoExpansionLowering(*OutStreamer, MI))
+    return;
+
   MCInst OutInst;
   if (!lowerToMCInst(MI, OutInst))
     EmitToStreamer(*OutStreamer, OutInst);
