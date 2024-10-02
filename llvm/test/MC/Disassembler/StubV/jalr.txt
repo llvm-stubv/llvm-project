@@ -1,0 +1,4 @@
+# RUN: llvm-mc --disassemble %s -triple=stubv32 | FileCheck %s
+
+# CHECK: ret
+[0x67,0x80,0x00,0x00]
