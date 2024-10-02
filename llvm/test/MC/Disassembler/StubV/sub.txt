@@ -1,0 +1,4 @@
+# RUN: llvm-mc --disassemble %s -triple=stubv32 | FileCheck %s
+
+# CHECK: sub a0, a4, a6
+[0x33,0x05,0x07,0x41]
