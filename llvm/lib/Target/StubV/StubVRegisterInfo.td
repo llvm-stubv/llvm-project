@@ -63,8 +63,11 @@ class StubVRegisterClass<list<ValueType> regTypes, int align, dag regList>
     : RegisterClass<"StubV", regTypes, align, regList> {
 }
 
+// Only supporting 32-bit for now
+defvar XLenVT = i32;
+
 class GPRRegisterClass<dag regList>
-    : StubVRegisterClass<[i32], 32, regList> {
+    : StubVRegisterClass<[XLenVT], 32, regList> {
 }
 
 // The order of registers represents the preferred allocation sequence.
