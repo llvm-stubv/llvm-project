@@ -346,6 +346,38 @@ def SLL : Instruction {
   let mayStore = 0;
 }
 
+// WIP: I don't know how this all works
+def SRL : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd); // Does this define rd, or is this a
+                               // register type that is defined elsewhere?
+  dag InOperandList = (ins GPR:$rs1, GPR:$rs2); // Likewise
+
+  let AsmString = "srl\t$rd, ${rs1}, ${rs2}";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<5> rd;
+  bits<5> rs1;
+  bits<5> rs2;
+
+  let Inst{31-25} = 0b0000000;
+  let Inst{24-20} = rs2;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b011; // I have chosen this number out of trial and error.
+                           // Where are these opcodes specified?
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP.Value; // How is this different to Inst{14-12}. Where
+                                // is OPC_OP defined? Is OPC_OP like a struct?
+                                // What other members can be used?
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+}
+
 //===----------------------------------------------------------------------===//
 // Assembler Pseudo Instructions
 //===----------------------------------------------------------------------===//
