@@ -1,0 +1,4 @@
+# RUN: llvm-mc --disassemble %s -triple=stubv32 | FileCheck %s
+
+# CHECK: srl a0, a1, a2
+[0x33,0xd5,0xc5,0x00]
