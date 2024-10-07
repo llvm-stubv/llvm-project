@@ -6,6 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "MCTargetDesc/StubVBaseInfo.h"
 #include "MCTargetDesc/StubVInstPrinter.h"
 #include "TargetInfo/StubVTargetInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -41,6 +42,12 @@ class StubVAsmParser : public MCTargetAsmParser {
                         SMLoc NameLoc, OperandVector &Operands) override;
 
   ParseStatus parseDirective(AsmToken DirectiveID) override;
+
+  bool generateImmOutOfRangeError(OperandVector &Operands, uint64_t ErrorInfo,
+                                  int64_t Lower, int64_t Upper,
+                                  const Twine &Msg);
+  bool generateImmOutOfRangeError(SMLoc ErrorLoc, int64_t Lower, int64_t Upper,
+                                  const Twine &Msg);
 
   bool MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                OperandVector &Operands, MCStreamer &Out,
@@ -130,6 +137,15 @@ public:
   bool isReg() const override { return Kind == KindTy::Register; }
   bool isImm() const override { return Kind == KindTy::Immediate; }
   bool isMem() const override { return false; }
+
+  bool isSImm12() const {
+    if (!isImm())
+      return false;
+    int64_t Imm;
+    if (!evaluateConstantImm(getImm(), Imm))
+      return false;
+    return isInt<12>(fixImmediateForRV32(Imm));
+  }
 
   static bool evaluateConstantImm(const MCExpr *Expr, int64_t &Imm) {
     if (const auto *CE = dyn_cast<MCConstantExpr>(Expr)) {
@@ -248,6 +264,19 @@ bool StubVAsmParser::processInstruction(MCInst &Inst, SMLoc IDLoc,
   return true;
 }
 
+bool StubVAsmParser::generateImmOutOfRangeError(
+    SMLoc ErrorLoc, int64_t Lower, int64_t Upper,
+    const Twine &Msg = "immediate must be an integer in the range") {
+  return Error(ErrorLoc, Msg + " [" + Twine(Lower) + ", " + Twine(Upper) + "]");
+}
+
+bool StubVAsmParser::generateImmOutOfRangeError(
+    OperandVector &Operands, uint64_t ErrorInfo, int64_t Lower, int64_t Upper,
+    const Twine &Msg = "immediate must be an integer in the range") {
+  SMLoc ErrorLoc = ((StubVOperand &)*Operands[ErrorInfo]).getStartLoc();
+  return generateImmOutOfRangeError(ErrorLoc, Lower, Upper, Msg);
+}
+
 bool StubVAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                              OperandVector &Operands,
                                              MCStreamer &Out,
@@ -281,6 +310,9 @@ bool StubVAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
     }
     return Error(ErrorLoc, "invalid operand for instruction");
   }
+  case Match_InvalidSImm12:
+    return generateImmOutOfRangeError(Operands, ErrorInfo, -(1 << 11),
+                                      (1 << 11) - 1);
   }
   report_fatal_error("Unknown match type detected!");
 }

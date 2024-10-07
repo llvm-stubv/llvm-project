@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "StubVMCTargetDesc.h"
+#include "StubVBaseInfo.h"
 #include "StubVInstPrinter.h"
 #include "StubVMCAsmInfo.h"
 #include "TargetInfo/StubVTargetInfo.h"

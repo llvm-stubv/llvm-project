@@ -51,6 +51,10 @@ public:
   unsigned getMachineOpValue(const MCInst &MI, const MCOperand &MO,
                              SmallVectorImpl<MCFixup> &Fixups,
                              const MCSubtargetInfo &STI) const;
+
+  unsigned getImmOpValue(const MCInst &MI, unsigned OpNo,
+                         SmallVectorImpl<MCFixup> &Fixups,
+                         const MCSubtargetInfo &STI) const;
 };
 } // namespace
 
@@ -85,6 +89,18 @@ StubVMCCodeEmitter::getMachineOpValue(const MCInst &MI, const MCOperand &MO,
 MCCodeEmitter *llvm::createStubVMCCodeEmitter(const MCInstrInfo &MCII,
                                               MCContext &Ctx) {
   return new StubVMCCodeEmitter(Ctx, MCII);
+}
+
+unsigned StubVMCCodeEmitter::getImmOpValue(const MCInst &MI, unsigned OpNo,
+                                           SmallVectorImpl<MCFixup> &Fixups,
+                                           const MCSubtargetInfo &STI) const {
+  const MCOperand &MO = MI.getOperand(OpNo);
+
+  // If the destination is an immediate, there is nothing to do.
+  if (MO.isImm())
+    return MO.getImm();
+
+  llvm_unreachable("Unhandled expression!");
 }
 
 #include "StubVGenMCCodeEmitter.inc"

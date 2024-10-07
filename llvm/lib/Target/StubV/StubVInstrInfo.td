@@ -18,6 +18,43 @@ def stubv_ret_glue  : SDNode<"StubVISD::RET_GLUE", SDTNone,
                              [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
 //===----------------------------------------------------------------------===//
+// Operand and SDNode transformation definitions.
+//===----------------------------------------------------------------------===//
+
+class ImmAsmOperand<string prefix, int width, string suffix> : AsmOperandClass {
+  let Name = prefix # "Imm" # width # suffix;
+  let RenderMethod = "addImmOperands";
+  let DiagnosticType = !strconcat("Invalid", Name);
+}
+
+class SImmAsmOperand<int width, string suffix = "">
+    : ImmAsmOperand<"S", width, suffix> {
+}
+
+class StubVOp<ValueType vt = XLenVT> : Operand<vt> {
+  let OperandNamespace = "StubVOp";
+}
+
+class StubVSImmOp<int bitsNum> : StubVOp {
+  let ParserMatchClass = SImmAsmOperand<bitsNum>;
+  let EncoderMethod = "getImmOpValue";
+  let DecoderMethod = "decodeSImmOperand<" # bitsNum # ">";
+  let OperandType = "OPERAND_SIMM" # bitsNum;
+}
+
+class StubVSImmLeafOp<int bitsNum> :
+  StubVSImmOp<bitsNum>, ImmLeaf<XLenVT, "return isInt<" # bitsNum # ">(Imm);">;
+
+def simm12 : StubVSImmLeafOp<12> {
+  let MCOperandPredicate = [{
+    int64_t Imm;
+    if (MCOp.evaluateAsConstantImm(Imm))
+      return isInt<12>(Imm);
+    return MCOp.isBareSymbolRef();
+  }];
+}
+
+//===----------------------------------------------------------------------===//
 // Instruction Formats
 //===----------------------------------------------------------------------===//
 
@@ -56,8 +93,7 @@ def ADD : Instruction {
 def ADDI : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
-  // FIXME: This is actually restricted to a 12-bit immediate
-  dag InOperandList = (ins GPR:$rs1, i32imm:$imm12);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
   let AsmString = "addi\t$rd, $rs1, $imm12";
 
   field bits<32> Inst;
@@ -88,9 +124,8 @@ def ADDI : Instruction {
 
 def : Pat<(XLenVT (add (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
           (ADD GPR:$rs1, GPR:$rs2)>;
-// FIXME: This should be restricted to 12 bit immediates.
-def : Pat<(XLenVT (add (XLenVT GPR:$rs1), imm:$simm12)),
-          (ADDI GPR:$rs1, imm:$simm12)>;
+def : Pat<(XLenVT (add (XLenVT GPR:$rs1), simm12:$simm12)),
+          (ADDI GPR:$rs1, simm12:$simm12)>;
 
 def OR : Instruction {
   let Namespace = "StubV";
@@ -177,8 +212,7 @@ def SUB : Instruction {
 def JALR : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
-  // FIXME: This is actually restricted to a 12-bit immediate
-  dag InOperandList = (ins GPR:$rs1, i32imm:$imm12);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
   let AsmString = "jalr\t$rd, ${imm12}(${rs1})";
 
   field bits<32> Inst;
@@ -380,13 +414,13 @@ def SRL : Instruction {
 
 def : InstAlias<"nop",           (ADDI      X0,      X0,       0)>;
 
-def : InstAlias<"li $rd, $imm",  (ADDI GPR:$rd, X0, i32imm:$imm)>;
+def : InstAlias<"li $rd, $imm",  (ADDI GPR:$rd, X0, simm12:$imm)>;
 def : InstAlias<"mv $rd, $rs",   (ADDI GPR:$rd, GPR:$rs,       0)>;
 
 // The GNU (and LLVM) RISC-V assemblers support the reg-reg mnemonic even when
 // an immediate is used.
 def : InstAlias<"add $rd, $rs1, $imm12",
-                (ADDI  GPR:$rd, GPR:$rs1, i32imm:$imm12)>;
+                (ADDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
 
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
 

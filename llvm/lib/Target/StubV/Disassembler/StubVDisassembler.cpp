@@ -69,6 +69,16 @@ static DecodeStatus DecodeGPRRegisterClass(MCInst &Inst, uint32_t RegNo,
   return MCDisassembler::Success;
 }
 
+template <unsigned N>
+static DecodeStatus decodeSImmOperand(MCInst &Inst, uint32_t Imm,
+                                      int64_t Address,
+                                      const MCDisassembler *Decoder) {
+  assert(isUInt<N>(Imm) && "Invalid immediate");
+  // Sign-extend the number in the bottom N bits of Imm
+  Inst.addOperand(MCOperand::createImm(SignExtend64<N>(Imm)));
+  return MCDisassembler::Success;
+}
+
 DecodeStatus StubVDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
                                                ArrayRef<uint8_t> Bytes,
                                                uint64_t Address,
