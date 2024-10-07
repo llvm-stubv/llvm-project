@@ -70,6 +70,10 @@ public:
 
   bool is64Bit() const { return false; }
   MVT getXLenVT() const { return is64Bit() ? MVT::i64 : MVT::i32; }
+
+#define GET_SUBTARGETINFO_MACRO(ATTRIBUTE, DEFAULT, GETTER) \
+  bool GETTER() const { return ATTRIBUTE; }
+#include "StubVGenSubtargetInfo.inc"
 };
 } // namespace llvm
 

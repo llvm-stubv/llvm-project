@@ -389,3 +389,10 @@ def : InstAlias<"add $rd, $rs1, $imm12",
                 (ADDI  GPR:$rd, GPR:$rs1, i32imm:$imm12)>;
 
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
+
+//===----------------------------------------------------------------------===//
+// Standard extensions
+//===----------------------------------------------------------------------===//
+
+// Multiply and Division
+include "StubVInstrInfoM.td"

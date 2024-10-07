@@ -22,12 +22,19 @@
 // SelectionDAG operations.
 namespace llvm {
 class StubVDAGToDAGISel : public SelectionDAGISel {
+  const StubVSubtarget *Subtarget = nullptr;
+
 public:
   StubVDAGToDAGISel() = delete;
 
   explicit StubVDAGToDAGISel(StubVTargetMachine &TargetMachine,
                              CodeGenOptLevel OptLevel)
       : SelectionDAGISel(TargetMachine, OptLevel) {}
+
+  bool runOnMachineFunction(MachineFunction &MF) override {
+    Subtarget = &MF.getSubtarget<StubVSubtarget>();
+    return SelectionDAGISel::runOnMachineFunction(MF);
+  }
 
   void Select(SDNode *Node) override;
 
