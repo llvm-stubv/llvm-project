@@ -209,6 +209,9 @@ def SUB : Instruction {
   let mayStore = 0;
 }
 
+def : Pat<(XLenVT (sub (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
+          (SUB GPR:$rs1, GPR:$rs2)>;
+
 def JALR : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
