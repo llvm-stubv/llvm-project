@@ -325,6 +325,39 @@ def AND : Instruction {
   let mayStore = 0;
 }
 
+def ANDI : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
+  let AsmString = "andi\t$rd, $rs1, $imm12";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<12> imm12;
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{31-20} = imm12;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b111;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP_IMM.Value;
+  let isCommutable = 1;
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+
+  let isReMaterializable = 1;
+  let isAsCheapAsAMove = 1;
+}
+
+def : Pat<(XLenVT (and (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
+          (AND GPR:$rs1, GPR:$rs2)>;
+def : Pat<(XLenVT (and (XLenVT GPR:$rs1), simm12:$simm12)),
+          (ANDI GPR:$rs1, simm12:$simm12)>;
+
 def XOR : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
