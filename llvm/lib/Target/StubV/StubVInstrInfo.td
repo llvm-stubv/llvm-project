@@ -348,9 +348,6 @@ def ANDI : Instruction {
   let hasSideEffects = 0;
   let mayLoad = 0;
   let mayStore = 0;
-
-  let isReMaterializable = 1;
-  let isAsCheapAsAMove = 1;
 }
 
 def : Pat<(XLenVT (and (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
@@ -457,6 +454,8 @@ def : InstAlias<"mv $rd, $rs",   (ADDI GPR:$rd, GPR:$rs,       0)>;
 // an immediate is used.
 def : InstAlias<"add $rd, $rs1, $imm12",
                 (ADDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
+def : InstAlias<"and $rd, $rs1, $imm12",
+                (ANDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
 
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
 

@@ -8,7 +8,7 @@ define i32 @and(i32 %a, i32 %b) {
 ; CHECK-LABEL: and:
 ; CHECK:       # %bb.0:
 ; CHECK-NEXT:    and a0, a0, a1
-; CHECK-NEXT:    andi a0, a0, 42
+; CHECK-NEXT:    and a0, a0, 42
 ; CHECK-NEXT:    ret
   %c = and i32 %a, %b
   %d = and i32 %c, 42
