@@ -7,3 +7,17 @@
 # CHECK-INST-NEXT:  <MCOperand Reg:12>
 # CHECK-INST-NEXT:  <MCOperand Reg:13>>
 and a0, a1, a2
+
+# CHECK-ENCODING: encoding: [0x13,0xf5,0xa5,0x02]
+# CHECK-INST:      <MCInst #{{[0-9]+}} ANDI
+# CHECK-INST-NEXT:  <MCOperand Reg:11>
+# CHECK-INST-NEXT:  <MCOperand Reg:12>
+# CHECK-INST-NEXT:  <MCOperand Imm:42>>
+and a0, a1, 42
+
+# CHECK-ENCODING: encoding: [0x13,0x76,0x85,0x01]
+# CHECK-INST:      <MCInst #{{[0-9]+}} ANDI
+# CHECK-INST-NEXT:  <MCOperand Reg:13>
+# CHECK-INST-NEXT:  <MCOperand Reg:11>
+# CHECK-INST-NEXT:  <MCOperand Imm:24>>
+andi a2, a0, 24
