@@ -16,14 +16,14 @@ xor a0, a1, a2
 xor a0, a1, 12
 
 # CHECK-ENCONDING: encoding: [0x13,0xc5,0xc5,0x00]
-# CHECK-INST: <MCInst #308 XORI
+# CHECK-INST: <MCInst #{{.*}} XORI
 # CHECK-INST-NEXT: <MCOperand Reg:11>
 # CHECK-INST-NEXT: <MCOperand Reg:12>
 # CHECK-INST-NEXT: <MCOperand Imm:12>>
 xori a0, a1, 12
 
 # CHECK-ENCODING: encoding: [0x13,0xc5,0xf5,0xff]
-# CHECK-INST: <MCInst #308 XORI
+# CHECK-INST: <MCInst #{{.*}} XORI
 # CHECK-INST-NEXT: <MCOperand Reg:11>
 # CHECK-INST-NEXT: <MCOperand Reg:12>
 # CHECK-INST-NEXT: <MCOperand Imm:-1>>
