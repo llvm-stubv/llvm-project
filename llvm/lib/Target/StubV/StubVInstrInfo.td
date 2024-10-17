@@ -386,6 +386,44 @@ def XOR : Instruction {
   let isCommutable = 1;
 }
 
+def XORI: Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
+  let AsmString = "xori\t$rd, $rs1, $imm12";
+
+  field bits<32> Inst;
+  // SoftFail is a field the disassembler can use to provide a way for
+  // instructions to not match without killing the whole decode process. It is
+  // mainly used for ARM, but Tablegen expects this field to exist or it fails
+  // to build the decode table.
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<12> imm12;
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{31-20} = imm12;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b100;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP_IMM.Value;
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+
+  let isCommutable = 1;
+  let isReMaterializable = 1;
+  let isAsCheapAsAMove = 1;
+}
+
+def : Pat<(XLenVT (xor (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
+          (XOR GPR:$rs1, GPR:$rs2)>;
+def : Pat<(XLenVT (xor (XLenVT GPR:$rs1), simm12:$simm12)),
+          (XORI GPR:$rs1, simm12:$simm12)>;
+
 def SLL : Instruction {
   let Namespace = "StubV";
   dag OutOperandList = (outs GPR:$rd);
@@ -449,6 +487,7 @@ def : InstAlias<"nop",           (ADDI      X0,      X0,       0)>;
 
 def : InstAlias<"li $rd, $imm",  (ADDI GPR:$rd, X0, simm12:$imm)>;
 def : InstAlias<"mv $rd, $rs",   (ADDI GPR:$rd, GPR:$rs,       0)>;
+def : InstAlias<"not $rd, $rs",  (XORI GPR:$rd, GPR:$rs,      -1)>;
 
 // The GNU (and LLVM) RISC-V assemblers support the reg-reg mnemonic even when
 // an immediate is used.
@@ -456,6 +495,8 @@ def : InstAlias<"add $rd, $rs1, $imm12",
                 (ADDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
 def : InstAlias<"and $rd, $rs1, $imm12",
                 (ANDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
+def : InstAlias<"xor $rd, $rs1, $imm12",
+                (XORI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
 
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
 
