@@ -10,9 +10,14 @@
   ; CHECK-LABEL: foo:
   ; CHECK:       # %bb.0:
   ; CHECK-NEXT:    xor a0, a0, a1
+  ; CHECK-NEXT:    xor a0, a0, 12
+  ; CHECK-NEXT:    not a0, a0
   ; CHECK-NEXT:    ret
+
     %c = xor i32 %a, %b
-    ret i32 %c
+    %d = xor i32 %c, 12
+    %e = xor i32 %d, -1
+    ret i32 %e
   }
 
 ...
@@ -72,6 +77,8 @@ body:             |
     liveins: $x10, $x11
 
     renamable $x10 = XOR killed renamable $x10, killed renamable $x11
+    renamable $x10 = XORI killed renamable $x10, 12
+    renamable $x10 = XORI killed renamable $x10, -1
     $x0 = JALR $x1, 0
 
 ...
