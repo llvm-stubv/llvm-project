@@ -311,6 +311,7 @@ const char *StubVTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case StubVISD::FIRST_NUMBER:
     break;
   NODE_NAME_CASE(RET_GLUE)
+  NODE_NAME_CASE(CTPOP_MAGIC)
   }
   // clang-format on
   return nullptr;
@@ -330,8 +331,7 @@ SDValue StubVTargetLowering::LowerOperation(SDValue Op,
 SDValue StubVTargetLowering::lowerCTPOP(SDValue Op, SelectionDAG &DAG) const {
   SDLoc DL(Op);
   SDValue Op0 = Op.getOperand(0);
-  SDValue Res = DAG.getNode(ISD::XOR, DL, Op.getValueType(), Op0,
-                            DAG.getConstant(42, DL, Op0.getValueType()));
+  SDValue Res = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, Op.getValueType(), Op0);
   return Res;
 }
 
@@ -344,7 +344,7 @@ void StubVTargetLowering::ReplaceNodeResults(SDNode *N,
     llvm_unreachable("Don't know how to custom type legalize this operation!");
   case ISD::CTPOP:
     auto ExtOp = DAG.getNode(ISD::ZERO_EXTEND, DL, MVT::i32, N->getOperand(0));
-    auto NewCTPOP = DAG.getNode(ISD::CTPOP, DL, MVT::i32, ExtOp);
+    auto NewCTPOP = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, MVT::i32, ExtOp);
     auto Trunc = DAG.getNode(ISD::TRUNCATE, DL, MVT::i8, NewCTPOP);
     Results.push_back(Trunc);
     return;

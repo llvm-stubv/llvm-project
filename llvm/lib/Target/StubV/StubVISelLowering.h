@@ -27,6 +27,8 @@ namespace StubVISD {
 enum NodeType : unsigned {
   FIRST_NUMBER = ISD::BUILTIN_OP_END,
   RET_GLUE,
+  CTPOP_MAGIC,
+// clang-format on
 };
 } // namespace StubVISD
 

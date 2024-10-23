@@ -26,6 +26,23 @@ void StubVDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
 
+  // Instruction Selection not handled by the auto-generated tablegen selection
+  // should be handled here.
+  unsigned Opcode = Node->getOpcode();
+  SDLoc DL(Node);
+  MVT VT = Node->getSimpleValueType(0);
+
+  switch (Opcode) {
+  default:
+    break;
+  case StubVISD::CTPOP_MAGIC: {
+    SDNode *Res =
+        CurDAG->getMachineNode(StubV::CTPOP_MAGIC, DL, VT, Node->getOperand(0));
+    ReplaceNode(Node, Res);
+    return;
+  }
+  }
+
   // Select the default instruction.
   SelectCode(Node);
 }
