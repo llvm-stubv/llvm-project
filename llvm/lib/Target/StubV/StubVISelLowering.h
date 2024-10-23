@@ -55,6 +55,10 @@ public:
                       const SmallVectorImpl<ISD::OutputArg> &Outs,
                       const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
                       SelectionDAG &DAG) const override;
+
+  // Provide custom lowering hooks for some operations.
+  SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
+
 private:
   void analyzeInputArgs(MachineFunction &MF, CCState &CCInfo,
                         const SmallVectorImpl<ISD::InputArg> &Ins,
@@ -62,6 +66,8 @@ private:
   void analyzeOutputArgs(MachineFunction &MF, CCState &CCInfo,
                          const SmallVectorImpl<ISD::OutputArg> &Outs,
                          bool IsRet, CallLoweringInfo *CLI) const;
+
+  SDValue lowerCTPOP(SDValue Op, SelectionDAG &DAG) const;
 };
 
 namespace StubV {

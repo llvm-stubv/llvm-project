@@ -33,6 +33,8 @@ StubVTargetLowering::StubVTargetLowering(const TargetMachine &TM,
 
   // Compute derived properties from the register classes.
   computeRegisterProperties(STI.getRegisterInfo());
+
+  setOperationAction(ISD::CTPOP, MVT::i32, Custom);
 }
 
 void StubVTargetLowering::analyzeInputArgs(
@@ -311,4 +313,22 @@ const char *StubVTargetLowering::getTargetNodeName(unsigned Opcode) const {
   // clang-format on
   return nullptr;
 #undef NODE_NAME_CASE
+}
+
+SDValue StubVTargetLowering::LowerOperation(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  switch (Op.getOpcode()) {
+  default:
+    report_fatal_error("unimplemented operand");
+  case ISD::CTPOP:
+    return lowerCTPOP(Op, DAG);
+  }
+}
+
+SDValue StubVTargetLowering::lowerCTPOP(SDValue Op, SelectionDAG &DAG) const {
+  SDLoc DL(Op);
+  SDValue Op0 = Op.getOperand(0);
+  SDValue Res = DAG.getNode(ISD::XOR, DL, Op.getValueType(), Op0,
+                            DAG.getConstant(42, DL, Op0.getValueType()));
+  return Res;
 }
