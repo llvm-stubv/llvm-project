@@ -26,6 +26,7 @@ void StubVDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
 
+#if 0
   // Instruction Selection not handled by the auto-generated tablegen selection
   // should be handled here.
   unsigned Opcode = Node->getOpcode();
@@ -42,6 +43,7 @@ void StubVDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
   }
+#endif
 
   // Select the default instruction.
   SelectCode(Node);

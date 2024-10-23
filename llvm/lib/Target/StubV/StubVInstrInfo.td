@@ -17,6 +17,9 @@
 def stubv_ret_glue  : SDNode<"StubVISD::RET_GLUE", SDTNone,
                              [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
+def SDT_StubVUnary   : SDTypeProfile<1, 1, [SDTCisVT<0, XLenVT>, SDTCisSameAs<0, 1>]>;
+def ctpop_magic : SDNode<"StubVISD::CTPOP_MAGIC", SDT_StubVUnary, []>;
+
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
 //===----------------------------------------------------------------------===//
@@ -535,3 +538,6 @@ def CTPOP_MAGIC : Instruction {
   let mayLoad  = 0; // This instr will never load from memory
   let mayStore = 0; // This instr will never store to memory
 }
+
+def : Pat<(XLenVT (ctpop_magic (XLenVT GPR:$rs1))),
+          (CTPOP_MAGIC GPR:$rs1)>;
