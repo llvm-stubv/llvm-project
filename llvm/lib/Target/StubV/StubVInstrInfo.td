@@ -17,8 +17,8 @@
 def stubv_ret_glue  : SDNode<"StubVISD::RET_GLUE", SDTNone,
                              [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 
-def SDT_StubVUnary   : SDTypeProfile<1, 1, [SDTCisVT<0, XLenVT>, SDTCisSameAs<0, 1>]>;
-def ctpop_magic : SDNode<"StubVISD::CTPOP_MAGIC", SDT_StubVUnary, []>;
+def SDT_StubVBinary   : SDTypeProfile<1, 2, [SDTCisVT<0, XLenVT>, SDTCisSameAs<0, 1>, SDTCisSameAs<1, 2>]>;
+def ctpop_magic : SDNode<"StubVISD::CTPOP_MAGIC", SDT_StubVBinary, []>;
 
 //===----------------------------------------------------------------------===//
 // Operand and SDNode transformation definitions.
@@ -539,5 +539,36 @@ def CTPOP_MAGIC : Instruction {
   let mayStore = 0; // This instr will never store to memory
 }
 
-def : Pat<(XLenVT (ctpop_magic (XLenVT GPR:$rs1))),
+def CTPOP_MAGIC_ADD : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
+  let AsmString = "ctpop.magic.add\t$rd, $rs1, $imm12";
+
+  field bits<32> Inst;
+  // SoftFail is a field the disassembler can use to provide a way for
+  // instructions to not match without killing the whole decode process. It is
+  // mainly used for ARM, but Tablegen expects this field to exist or it fails
+  // to build the decode table.
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{6-0}   = 0b0110011;  // First 6 Bits seems to signify which class the instruction belongs to (from the RISCV manual)
+  let Inst{11-7}  = rd;        // The output register
+  let Inst{14-12} = 0b100;     // 3 More bits to point to the XOR instruction, the first 6 bits maybe common for diff instrs.
+  let Inst{19-15} = rs1;       // Operand number 1
+  let Inst{20-24} = 0b11110;   // Operand number 2
+  let Inst{31-25} = 0b0000000; // Fill the remaining bits with 0, as the RISCV manual says
+
+  let hasSideEffects = 0; // This instr does not raise any exceptions, traps: e.g division by 0
+  let mayLoad  = 0; // This instr will never load from memory
+  let mayStore = 0; // This instr will never store to memory
+}
+
+def : Pat<(XLenVT (ctpop_magic (XLenVT GPR:$rs1), 0)),
           (CTPOP_MAGIC GPR:$rs1)>;
+def : Pat<(XLenVT (ctpop_magic (XLenVT GPR:$rs1), simm12:$imm12)),
+          (CTPOP_MAGIC_ADD GPR:$rs1, simm12:$imm12)>;

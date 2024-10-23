@@ -331,7 +331,8 @@ SDValue StubVTargetLowering::LowerOperation(SDValue Op,
 SDValue StubVTargetLowering::lowerCTPOP(SDValue Op, SelectionDAG &DAG) const {
   SDLoc DL(Op);
   SDValue Op0 = Op.getOperand(0);
-  SDValue Res = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, Op.getValueType(), Op0);
+  SDValue Res = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, Op.getValueType(), Op0,
+                            DAG.getConstant(0, DL, Op0.getValueType()));
   return Res;
 }
 
@@ -344,9 +345,32 @@ void StubVTargetLowering::ReplaceNodeResults(SDNode *N,
     llvm_unreachable("Don't know how to custom type legalize this operation!");
   case ISD::CTPOP:
     auto ExtOp = DAG.getNode(ISD::ZERO_EXTEND, DL, MVT::i32, N->getOperand(0));
-    auto NewCTPOP = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, MVT::i32, ExtOp);
+    auto NewCTPOP = DAG.getNode(StubVISD::CTPOP_MAGIC, DL, MVT::i32, ExtOp,
+                                DAG.getConstant(0, DL, MVT::i32));
     auto Trunc = DAG.getNode(ISD::TRUNCATE, DL, MVT::i8, NewCTPOP);
     Results.push_back(Trunc);
     return;
   }
+}
+
+SDValue StubVTargetLowering::PerformDAGCombine(SDNode *N,
+                                               DAGCombinerInfo &DCI) const {
+  SelectionDAG &DAG = DCI.DAG;
+  SDLoc DL(N);
+
+  switch (N->getOpcode()) {
+  default:
+    break;
+  case StubVISD::CTPOP_MAGIC: {
+    auto Op0 = N->getOperand(0);
+
+    if (Op0.getOpcode() != ISD::ADD || !isa<ConstantSDNode>(Op0.getOperand(1)))
+      break;
+
+    return DAG.getNode(StubVISD::CTPOP_MAGIC, DL, MVT::i32, Op0.getOperand(0),
+                       Op0.getOperand(1));
+  }
+  }
+
+  return SDValue();
 }
