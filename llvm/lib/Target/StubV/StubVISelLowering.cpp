@@ -34,6 +34,8 @@ StubVTargetLowering::StubVTargetLowering(const TargetMachine &TM,
   // Compute derived properties from the register classes.
   computeRegisterProperties(STI.getRegisterInfo());
 
+
+  setOperationAction(ISD::CTPOP, MVT::i8, Custom);
   setOperationAction(ISD::CTPOP, MVT::i32, Custom);
 }
 
@@ -331,4 +333,20 @@ SDValue StubVTargetLowering::lowerCTPOP(SDValue Op, SelectionDAG &DAG) const {
   SDValue Res = DAG.getNode(ISD::XOR, DL, Op.getValueType(), Op0,
                             DAG.getConstant(42, DL, Op0.getValueType()));
   return Res;
+}
+
+void StubVTargetLowering::ReplaceNodeResults(SDNode *N,
+                                             SmallVectorImpl<SDValue> &Results,
+                                             SelectionDAG &DAG) const {
+  SDLoc DL(N);
+  switch (N->getOpcode()) {
+  default:
+    llvm_unreachable("Don't know how to custom type legalize this operation!");
+  case ISD::CTPOP:
+    auto ExtOp = DAG.getNode(ISD::ZERO_EXTEND, DL, MVT::i32, N->getOperand(0));
+    auto NewCTPOP = DAG.getNode(ISD::CTPOP, DL, MVT::i32, ExtOp);
+    auto Trunc = DAG.getNode(ISD::TRUNCATE, DL, MVT::i8, NewCTPOP);
+    Results.push_back(Trunc);
+    return;
+  }
 }
