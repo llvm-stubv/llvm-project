@@ -15,6 +15,7 @@
 #include "StubV.h"
 #include "StubVSubtarget.h"
 #include "StubVTargetMachine.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 
 using namespace llvm;
 
@@ -39,4 +40,57 @@ void StubVInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
   // Other than that we don't know what to do yet
   report_fatal_error("Unable to copy phys reg");
+}
+
+void StubVInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
+                                         MachineBasicBlock::iterator I,
+                                         Register SrcReg, bool IsKill, int FI,
+                                         const TargetRegisterClass *RC,
+                                         const TargetRegisterInfo *TRI,
+                                         Register VReg) const {
+  MachineFunction *MF = MBB.getParent();
+  MachineFrameInfo &MFI = MF->getFrameInfo();
+
+  unsigned Opcode;
+  if (StubV::GPRRegClass.hasSubClassEq(RC)) {
+    assert(TRI->getRegSizeInBits(StubV::GPRRegClass) == 32);
+    Opcode = StubV::SW;
+  } else
+    llvm_unreachable("Can't store this register to stack slot");
+
+  MachineMemOperand *MMO = MF->getMachineMemOperand(
+      MachinePointerInfo::getFixedStack(*MF, FI), MachineMemOperand::MOStore,
+      MFI.getObjectSize(FI), MFI.getObjectAlign(FI));
+
+  BuildMI(MBB, I, DebugLoc(), get(Opcode))
+      .addReg(SrcReg, getKillRegState(IsKill))
+      .addFrameIndex(FI)
+      .addImm(0)
+      .addMemOperand(MMO);
+}
+
+void StubVInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
+                                          MachineBasicBlock::iterator I,
+                                          Register DstReg, int FI,
+                                          const TargetRegisterClass *RC,
+                                          const TargetRegisterInfo *TRI,
+                                          Register VReg) const {
+  MachineFunction *MF = MBB.getParent();
+  MachineFrameInfo &MFI = MF->getFrameInfo();
+
+  unsigned Opcode;
+  if (StubV::GPRRegClass.hasSubClassEq(RC)) {
+    assert(TRI->getRegSizeInBits(StubV::GPRRegClass) == 32);
+    Opcode = StubV::LW;
+  } else
+    llvm_unreachable("Can't load this register from stack slot");
+
+  MachineMemOperand *MMO = MF->getMachineMemOperand(
+      MachinePointerInfo::getFixedStack(*MF, FI), MachineMemOperand::MOLoad,
+      MFI.getObjectSize(FI), MFI.getObjectAlign(FI));
+
+  BuildMI(MBB, I, DebugLoc(), get(Opcode), DstReg)
+      .addFrameIndex(FI)
+      .addImm(0)
+      .addMemOperand(MMO);
 }

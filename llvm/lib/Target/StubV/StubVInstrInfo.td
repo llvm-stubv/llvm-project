@@ -54,6 +54,15 @@ def simm12 : StubVSImmLeafOp<12> {
   }];
 }
 
+class MemOperand<RegisterClass regClass> : RegisterOperand<regClass>{
+  let OperandType = "OPERAND_MEMORY";
+}
+
+def GPRMem : MemOperand<GPR>;
+
+// Addressing modes.
+def AddrRegImm : ComplexPattern<iPTR, 2, "SelectAddrRegImm">;
+
 //===----------------------------------------------------------------------===//
 // Instruction Formats
 //===----------------------------------------------------------------------===//
@@ -479,6 +488,65 @@ def SRL : Instruction {
   let mayStore = 0;
 }
 
+def LW : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPRMem:$rs1, simm12:$imm12);
+
+  let AsmString = "lw\t$rd, ${imm12}(${rs1})";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<12> imm12;
+  bits<5> rd;
+  bits<5> rs1;
+
+  let Inst{31-20} = imm12;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b010;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_LOAD.Value;
+
+  let hasSideEffects = 0;
+  let mayLoad = 1;
+  let mayStore = 0;
+}
+
+def : Pat<(XLenVT (load (AddrRegImm (XLenVT GPR:$rs1), simm12:$imm12))),
+          (LW GPR:$rs1, simm12:$imm12)>;
+
+def SW : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs);
+  dag InOperandList = (ins GPR:$rs2, GPRMem:$rs1, simm12:$imm12);
+
+  let AsmString = "sw\t$rs2, ${imm12}(${rs1})";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<12> imm12;
+  bits<5> rs2;
+  bits<5> rs1;
+
+  let Inst{31-25} = imm12{11-5};
+  let Inst{24-20} = rs2;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b010;
+  let Inst{11-7} = imm12{4-0};
+  let Inst{6-0} = OPC_STORE.Value;
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 1;
+}
+
+def : Pat<(store (XLenVT GPR:$rs2), (AddrRegImm (XLenVT GPR:$rs1), simm12:$imm12)),
+          (SW GPR:$rs2, GPR:$rs1, simm12:$imm12)>;
+
 //===----------------------------------------------------------------------===//
 // Assembler Pseudo Instructions
 //===----------------------------------------------------------------------===//
@@ -497,6 +565,12 @@ def : InstAlias<"and $rd, $rs1, $imm12",
                 (ANDI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
 def : InstAlias<"xor $rd, $rs1, $imm12",
                 (XORI  GPR:$rd, GPR:$rs1, simm12:$imm12)>;
+
+def : InstAlias<"lw $rd, (${rs1})",
+                (LW  GPR:$rd, GPR:$rs1, 0)>;
+
+def : InstAlias<"sw $rs2, (${rs1})",
+                (SW  GPR:$rs2, GPR:$rs1, 0)>;
 
 def : InstAlias<"ret",                   (JALR      X0,      X1, 0), 4>;
 

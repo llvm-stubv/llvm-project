@@ -35,6 +35,18 @@ public:
                    const DebugLoc &DL, MCRegister DstReg, MCRegister SrcReg,
                    bool KillSrc) const override;
 
+  void storeRegToStackSlot(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator I, Register SrcReg,
+                           bool IsKill, int FI, const TargetRegisterClass *RC,
+                           const TargetRegisterInfo *TRI,
+                           Register VReg) const override;
+
+  void loadRegFromStackSlot(MachineBasicBlock &MBB,
+                            MachineBasicBlock::iterator I, Register DstReg,
+                            int FI, const TargetRegisterClass *RC,
+                            const TargetRegisterInfo *TRI,
+                            Register VReg) const override;
+
 protected:
   const StubVSubtarget &STI;
 };
