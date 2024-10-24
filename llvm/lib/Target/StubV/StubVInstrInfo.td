@@ -240,6 +240,37 @@ def SW : Instruction {
 def : Pat<(store (XLenVT GPR:$rs2), (AddrRegImm (XLenVT GPR:$rs1), simm12:$imm12)),
           (SW GPR:$rs2, GPR:$rs1, simm12:$imm12)>;
 
+def SRLI : Instruction {
+  let Namespace = "StubV";
+  dag OutOperandList = (outs GPR:$rd);
+  dag InOperandList = (ins GPR:$rs1, simm12:$imm12);
+
+  let AsmString = "srl\t${rd}, ${rs1}, ${imm12}";
+
+  field bits<32> Inst;
+  field bits<32> SoftFail = 0;
+  let Size = 4;
+
+  bits<12> imm12;
+  bits<5> rs1;
+  bits<5> rd;
+
+  let Inst{31-20} = imm12;
+  let Inst{19-15} = rs1;
+  let Inst{14-12} = 0b101;
+  let Inst{11-7} = rd;
+  let Inst{6-0} = OPC_OP.Value;
+
+  let hasSideEffects = 0;
+  let mayLoad = 0;
+  let mayStore = 0;
+}
+
+def : Pat<(XLenVT (srl (XLenVT GPR:$rs1), (XLenVT GPR:$rs2))),
+          (SRL GPR:$rs1, GPR:$rs2)>;
+def : Pat<(XLenVT (srl (XLenVT GPR:$rs1), simm12:$imm12)),
+          (SRLI GPR:$rs1, simm12:$imm12)>;
+
 //===----------------------------------------------------------------------===//
 // Assembler Pseudo Instructions
 //===----------------------------------------------------------------------===//
